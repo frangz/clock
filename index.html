@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <title>PolarClock</title>
+    <link type="text/css" rel="stylesheet" href="/static/ex.css">
+    <script type="text/javascript" src="/static/protovis.js"></script><style type="text/css"></style>
+    <link href='http://fonts.googleapis.com/css?family=Monda:700' rel='stylesheet' type='text/css'>
+    <style type="text/css">
+      body {
+        background: #222;
+        overflow-y: hidden;
+      }
+      #fig {
+        width: 80%;
+        height: 100%;
+        text-align: center;
+      }
+      #label {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        font: 10px sans-serif;
+        color: #999;
+      }
+      #label a {
+        color: #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="center"><div id="fig">
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script type="text/javascript+protovis">
+      var h = Math.min($(window).height(), $(window).width()),
+          xinit = 0,
+          yinit = 0;
+      var fsec = pv.Format.date("%S"),
+          fmin = pv.Format.date("%M"),
+          fhou = pv.Format.date("%H"),
+          fwee = pv.Format.date("%a"),
+          fdat = pv.Format.date("%d"),
+          fmon = pv.Format.date("%b"),
+          radius = h / 2,
+          rx = h / 768,
+          outerRadiusPendiente = 60,
+          // colors
+          // dayColor = pv.Scale.linear(0, 250, 500, 750, 1000).range("#FFFFFF", "#FFA34B", "#FF5E4C", "#D7F7D9", "#48D9DE"),
+          dayColor = function(d) "hsl(" + (80 - d.value * 100) + ", 80%, 50%)",
+          dayColorBrighter = function(d) "hsl(" + (80 - d.value * 100) + ", 100%, 60%)";
+
+          var colors = [dayColor, dayColor, dayColor, dayColor, dayColor];
+
+
+      /* Generate the fields for the given date. */
+      var fields = function() {
+        var d = new Date();
+
+        function days() {
+          return 32 - new Date(d.getYear(), d.getMonth(), 32).getDate();
+        }
+
+        var millisecond = (d.getMilliseconds() / 1000) * yinit;
+        var second = ((d.getSeconds() + d.getMilliseconds() / 1000) / 60) * yinit;
+        var minute = ((d.getMinutes() + second) / 60) * Math.pow(yinit,2);
+        var hour = ((d.getHours() + minute) / 24) * Math.pow(yinit,4);
+        var weekday = ((d.getDay() + hour) / 7) * Math.pow(yinit,8);
+        var date = ((d.getDate() - 1 + hour) / days()) * Math.pow(yinit,16);
+        var month = ((d.getMonth() + date) / 12) * Math.pow(yinit,32);
+
+        return [
+            { 
+                value: month.toFixed(5),     
+                index: .825, 
+                width: .075, 
+                text: fmon(d), 
+                textSize: 55,
+                c: function(d) colors[0](d),
+            },
+            { 
+                value: date.toFixed(5), 
+                index: .775, 
+                width: .075, 
+                text: fdat(d), 
+                textSize: 80,
+                c: function(d) colors[1](d),
+            },
+            { 
+                value: hour.toFixed(5),      
+                index: .6, 
+                width: .2, 
+                text: fhou(d),
+                textSize: 80, 
+                c: function(d) colors[2](d), 
+            },
+            { 
+                value: minute.toFixed(5),    
+                index: .2, 
+                width: .425, 
+                text: fmin(d), 
+                textSize: 80,
+                c: function(d) colors[3](d), 
+            },
+            { 
+                value: second.toFixed(5),    
+                index: .175, 
+                width: .05, 
+                text: fsec(d), 
+                textSize: 80,    
+                c: function(d) colors[4](d), 
+            }
+          ];
+      };
+
+      var mouseoverLabel;
+      function centerLabel(d) {
+        var f = fields();
+
+        if (mouseoverLabel) {
+            for (var i=0; i < f.length; i++) {
+                if (mouseoverLabel.index == f[i].index) {
+                    return [f[i].text, f[i].textSize * rx, getColor(f[i])];
+                }
+            }
+        }
+
+        var seconds = f[f.length - 1];
+        var month = f[0];
+        if (seconds.value > 51/60 && month.value > 1/60) {
+            return [60 - seconds.text, 105 * rx, getColor(seconds)];
+        }
+        
+        var index = 0;
+        while(index < 3) {
+           if (f[index].value < 1/60) {
+              if (index == 0) {
+                return [new Date().getFullYear(), 40 * rx, getColor(seconds)];
+              } else {
+                return [f[0].text + ' ' + f[1].text, 34 * rx, getColor(f[1])];
+              }
+           }
+           index++;
+        }
+
+        return [f[2].text + ':' + f[3].text, 36 * rx, getColor(seconds)];
+      }
+
+
+      var getColor = function(d) {
+         return d.c(d);
+      }
+
+      var setColor = function(d, colorScheme) {
+        var f = fields();
+        for (var i=0; i < f.length; i++) {
+            if (d.index == f[i].index) {
+                colors[i] = colorScheme;
+                return;
+            }
+        }
+      }
+
+      var vis = new pv.Panel()
+          .width(radius * 2)
+          .height(radius * 2);
+
+      vis.add(pv.Wedge)
+          .data(fields)
+          .left(radius)
+          .bottom(radius)
+ //         .innerRadius(function(d) radius * (d.index + (d.width * (1 - (d.value * outerRadiusPendiente > 1 ? 1 : d.value * outerRadiusPendiente)))))
+   //       .outerRadius(function(d) radius * (d.index + d.width))
+          .innerRadius(function(d) radius * d.index)
+          .outerRadius(function(d) radius * (d.index + d.width * (d.value * outerRadiusPendiente > 1 ? 1 : d.value * outerRadiusPendiente)))
+//          .startAngle(function(d) 2 * Math.PI * d.value - 0.5 * Math.PI)
+  //        .angle(function(d) (2 * Math.PI) - 2 * Math.PI * d.value)
+          .startAngle(function(d) Math.PI * d.value - 0.5 * Math.PI)
+          .angle(function(d) (2 * Math.PI) - 2 * Math.PI * d.value)
+          .fillStyle(function(d) getColor(d))
+          .lineWidth(Math.floor(5 * rx))
+          .strokeStyle("#222")
+          .event("mouseover", function(d) { mouseoverLabel = d; setColor(d, dayColorBrighter); })
+          .event("mouseout", function(d) { mouseoverLabel = undefined; setColor(d, dayColor); })
+          //.event("touchstart", function(d) { mouseoverLabel = d; setColor(d, dayColorBrighter); })
+          //.event("touchend", function(d) { mouseoverLabel = undefined; setColor(d, dayColor); })
+/*.anchor("start").add(pv.Label)
+          .font("bold 12px sans-serif")
+          .textStyle("#FFF")
+          .textMargin(7)
+          .text(function(d) d.value);
+*/
+    .add(pv.Label)
+        .left(radius)
+        .top(radius)
+        .textAlign("center")
+        .textBaseline("middle")
+        .text(function(d) centerLabel(d)[0])
+        .font(function(d) centerLabel(d)[1] + "px 'Monda', sans-serif")
+        .textStyle(function(d) centerLabel(d)[2]);
+
+
+    var initIncrease = 1 / (1000 / 35) / 5;
+    var increaseInit = function() {
+        if (xinit < 1) {
+            xinit += initIncrease;
+            yinit = (Math.sin(Math.PI * xinit - Math.PI/2)+1)/2;
+        }
+    }
+
+
+      setInterval(function() {vis.render(); increaseInit()}, 35);
+
+    </script>
+  </div></div>
+  <div id="label">
+    Inspired by <a href="http://blog.pixelbreaker.com/polarclock/">pixelbreaker</a>.
+  </div>
+  </body>
+</html>
