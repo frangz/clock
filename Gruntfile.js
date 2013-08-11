@@ -23,6 +23,56 @@ module.exports = function (grunt) {
     };
 
     grunt.initConfig({
+        aws: grunt.file.readJSON('.grunt-aws.json'),
+          s3: {
+            options: {
+              key: '<%= aws.key %>',
+              secret: '<%= aws.secret %>',
+              bucket: '<%= aws.bucket %>',
+              region: '<%= aws.region %>',
+              access: 'public-read'
+            },
+            dev: {
+              options: {
+                encodePaths: true,
+                maxOperations: 20
+              },
+              upload: [
+                {
+                  src: 'dist/*'
+                },
+                {
+                  src: 'dist/scripts/*',
+                  dest: 'scripts/',
+                  gzip: true
+                },
+                {
+                  src: 'dist/scripts/vendor/*',
+                  dest: 'scripts/vendor/',
+                  gzip: true
+                },
+                {
+                  src: 'dist/styles/*',
+                  dest: 'styles/',
+                  gzip: true
+                },
+                {
+                  src: 'dist/styles/vendor/*',
+                  dest: 'styles/vendor/',
+                  gzip: true
+                },
+                {
+                  src: 'dist/styles/fonts/*',
+                  dest: 'styles/fonts/'
+                },
+                {
+                  src: 'dist/images/*',
+                  dest: 'images/'
+                },
+              ]
+            }
+          },
+
         yeoman: yeomanConfig,
         watch: {
             coffee: {
@@ -181,7 +231,7 @@ module.exports = function (grunt) {
                     src: [
                         '<%= yeoman.dist %>/scripts/{,*/}*.js',
                         '<%= yeoman.dist %>/styles/{,*/}*.css',
-                        '<%= yeoman.dist %>/images/{,*/}*.{png,jpg,jpeg,gif,webp}',
+                       // '<%= yeoman.dist %>/images/{,*/}*.{png,jpg,jpeg,gif,webp}',
                         '<%= yeoman.dist %>/styles/fonts/*'
                     ]
                 }
