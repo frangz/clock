@@ -44,30 +44,36 @@ module.exports = function (grunt) {
                 {
                   src: 'dist/scripts/*',
                   dest: 'scripts/',
-                  gzip: true
+                  gzip: true,
+                  headers: { 'Cache-Control': 'max-age=86400' }
                 },
                 {
                   src: 'dist/scripts/vendor/*',
                   dest: 'scripts/vendor/',
-                  gzip: true
+                  gzip: true,
+                  headers: { 'Cache-Control': 'max-age=86400' }
                 },
                 {
                   src: 'dist/styles/*',
                   dest: 'styles/',
-                  gzip: true
+                  gzip: true,
+                  headers: { 'Cache-Control': 'max-age=86400' }
                 },
                 {
                   src: 'dist/styles/vendor/*',
                   dest: 'styles/vendor/',
-                  gzip: true
+                  gzip: true,
+                  headers: { 'Cache-Control': 'max-age=86400' }
                 },
                 {
                   src: 'dist/styles/fonts/*',
-                  dest: 'styles/fonts/'
+                  dest: 'styles/fonts/',
+                  headers: { 'Cache-Control': 'max-age=86400' }
                 },
                 {
                   src: 'dist/images/*',
-                  dest: 'images/'
+                  dest: 'images/',
+                  headers: { 'Cache-Control': 'max-age=86400' }
                 },
               ]
             }

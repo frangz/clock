@@ -8,7 +8,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <title>The New Year Clock</title>
         <meta name="description" content="A twist to the polar clock.">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
 		<meta property="fb:app_id"          content="709034602456260" /> 
 		<meta property="og:type"            content="visualization" /> 
@@ -19,6 +19,7 @@
         <link rel="apple-touch-icon" href="apple-touch-icon-iphone.png" />
 		<link rel="apple-touch-icon" sizes="72x72" href="apple-touch-icon-ipad.png" />
 		<link rel="apple-touch-icon" sizes="114x114" href="apple-touch-icon-iphone4.png" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
 		
         <!-- build:css({.tmp,app}) styles/vendor/bootstrap.min.css -->
         <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
@@ -49,7 +50,7 @@
                 <div id="clock" class="col-lg-12 col-12">
 					<button type="button" id="help" href="#info" class="btn btn-default glyphicon glyphicon-question-sign" alt="What's this?" title="What's this?"></button>
 					<script type="text/javascript+protovis">
-      var h = Math.min($(window).height(), $(window).width()),
+      var h = Math.min($(window).height() * 0.9, $(window).width()-30),
           xinit = 0,
           yinit = 0,
           fsec = pv.Format.date("%S"),
@@ -58,6 +59,7 @@
           fwee = pv.Format.date("%a"),
           fdat = pv.Format.date("%d"),
           fmon = pv.Format.date("%b"),
+          fdate = pv.Format.date("%B %d %Y %H:%M:%S"),
           radius = h / 2,
           rx = h / 768,
           outerRadiusPendiente = 60,
@@ -68,10 +70,9 @@
 
           var colors = [dayColor, dayColor, dayColor, dayColor, dayColor];
           
-          $('#info').height(h);
-
       var fields = function() {
-        var d = new Date();
+        var d = new Date(new Date().getTime() + calculateDelta());
+        $('#date').text(fdate(d));
 
         function days() {
           return 32 - new Date(d.getYear(), d.getMonth(), 32).getDate();
@@ -152,7 +153,7 @@
         while(index < 4) {
            if (f[index].value < 1/60) {
               if (index == 0) {
-                return [new Date().getFullYear(), 40 * rx, getColor(seconds)];
+                return [new Date(new Date().getTime() + calculateDelta()).getFullYear(), 40 * rx, getColor(seconds)];
               } else if (index == 3) {
                 return [f[2].text + ':' + f[3].text, 36 * rx, getColor(seconds)];
               } else  {
@@ -179,6 +180,73 @@
         }
       }
 
+	  var delta = [0, 0, 0, 0, 0];
+	  
+	  $('#date').click(function() {delta = [0, 0, 0, 0, 0]});
+	  
+	  var calculateDelta = function() {
+		  return delta[0] * 30 * 24 * 60 * 60 * 1000 
+			   + delta[1] * 24 * 60 * 60 * 1000
+			   + delta[2] * 60 * 60 * 1000
+			   + delta[3] * 60 * 1000
+			   + delta[4] * 1000;
+	  }
+	  
+	  var onleftclick = function(d) {
+			var f = fields();
+			for (var i=0; i < f.length; i++) {
+				if (d.index == f[i].index) {
+					delta[i] = delta[i] + 1;
+					return;
+				}
+			}
+	  }
+	  
+	  var onmiddleclick = function(d) {
+		  var f = fields();
+			for (var i=0; i < f.length; i++) {
+				if (d.index == f[i].index) {
+					delta[i] = 0;
+					return;
+				}
+			}
+	  }
+	  
+	  var onrightclick = function(d) {var f = fields();
+			for (var i=0; i < f.length; i++) {
+				if (d.index == f[i].index) {
+					delta[i] = delta[i] - 1;
+					return;
+				}
+			}
+	  }
+      
+      var onmousedown = function(d) {
+		  switch (event.which) {
+			case 1:
+				onleftclick(d);
+				break;
+			case 2:
+				onmiddleclick(d);
+				break;
+			case 3:
+				onrightclick(d);
+				break;
+			default:
+				console.log('You have a strange mouse');
+		}
+		
+		return false;
+	  }
+	  
+	  var onmousewheel = function(d) {
+		  if (event.wheel > 0) {
+			  onleftclick(d);
+		  } else if (event.wheel < 0) {
+			  onrightclick(d);
+		  } 
+	  }
+
       var vis = new pv.Panel()
           .width(radius * 2)
           .height(radius * 2);
@@ -196,6 +264,9 @@
           .strokeStyle("#222")
           .event("mouseover", function(d) { mouseoverLabel = d; setColor(d, dayColorBrighter); })
           .event("mouseout", function(d) { mouseoverLabel = undefined; setColor(d, dayColor); })
+          .event("mousedown", onmousedown)
+          .event("mouseup", onmouseup)
+          .event("mousewheel", onmousewheel)
     .add(pv.Label)
         .left(radius)
         .top(radius)
@@ -214,8 +285,17 @@
     }
 
       setInterval(function() {vis.render(); increaseInit()}, 35);
+      $('.row').height($(window).height());
+      $('#info').show();
+      
+	  $('#clock').bind('contextmenu',function(e){
+		  e.preventDefault();
+		  return false;
+	  });
+	   
     </script>
 				</div>
+				<div id="date" class="col-lg-12 col-12" title="Click to reset the date"></div>
 			</div>
 			<div id="info" class="row">
 				<div class="col-lg-12 col-12">
