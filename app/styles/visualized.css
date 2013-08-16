@@ -1,0 +1,43 @@
+body {
+    background: #FFF;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #222;
+    overflow: hidden;
+}
+
+#clock, #clock span {
+    text-align: center;
+   # margin: auto;
+}
+
+#info {
+    display: none;
+}
+
+h1, p {
+    color: #eee;
+    #font-family: sans serif;
+}
+
+#share {
+}
+
+.row button {
+    position: absolute;
+    float: right;
+    top: 0px;
+    right: 0.5em;
+}
+
+#date {
+    font-family: 'Monda', sans serif;
+    color: white;
+    text-align: center;
+    font-size: 2em;
+    height: 10%;
+    cursor: pointer;
+}
+
+path {
+    cursor: pointer;   
+}
