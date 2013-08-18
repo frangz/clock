@@ -83,8 +83,8 @@
         var minute = ((d.getMinutes() + second) / 60) * Math.pow(yinit,2);
         var hour = ((d.getHours() + minute) / 24) * Math.pow(yinit,4);
         var weekday = ((d.getDay() + hour) / 7) * Math.pow(yinit,8);
-        var date = ((d.getDate() - 1 + hour) / days()) * Math.pow(yinit,16);
-        var month = ((d.getMonth() + date) / 12) * Math.pow(yinit,32);
+        var date = ((d.getDate() - 1 + hour) / days()) * Math.pow(yinit,8);
+        var month = ((d.getMonth() + date) / 12) * Math.pow(yinit,16);
 
         return [
             { 

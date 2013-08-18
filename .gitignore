@@ -3,4 +3,5 @@ dist
 .grunt-aws.json
 .tmp
 .sass-cache
+.project
 app/bower_components

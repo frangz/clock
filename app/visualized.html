@@ -10,6 +10,9 @@
         <meta name="description" content="A twist to the polar clock.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
+        <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,700,800' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Arimo:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    
         <!-- build:css({.tmp,app}) styles/vendor/bootstrap.min.css -->
         <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
         <!-- endbuild -->
@@ -25,7 +28,7 @@
             <div class="row">
                 <div id="clock" class="col-lg-12 col-12">
 					<script type="text/javascript+protovis">
-      var h = Math.min($(window).height() * 0.9, $(window).width()-30),
+      var h = Math.min($(window).height(), $(window).width()-30),
           xinit = 0,
           yinit = 0,
           fsec = pv.Format.date("%S"),
@@ -33,7 +36,7 @@
           fhou = pv.Format.date("%H"),
           fwee = pv.Format.date("%a"),
           fdat = pv.Format.date("%d"),
-          fmon = pv.Format.date("%b"),
+          fmon = pv.Format.date("%m"),
           fdate = pv.Format.date("%B %d %Y %H:%M:%S"),
           radius = h / 2,
           rx = h / 768,
@@ -43,116 +46,109 @@
           //dayColor = function(d) "hsl(" + (80 - d.value * 100) + ", 80%, 50%)",
           dayColorBrighter = function(d) "hsl(" + (80 - d.value * 100) + ", 100%, 60%)";
 
-          var colors = [dayColor, dayColor, dayColor, dayColor, dayColor];
-          
-      var fields = function() {
-        var d = new Date();
-        $('#date').text(fdate(d));
+          var colors = [dayColor, dayColor, dayColor, dayColor, dayColor],
+              overlayColors = ['#713b81', '#58a45a', '#e43236', 'hsla(0,0%,0%,.5)'];
+        
+        
+        var background = [
+            { index: 0,     width: .95,       c: function(d) "#E0E0E0", value: "0.0", }
+        ];
+        
+        var fields = [
+            { label: 'MONTH',   index: .7,    width: .25,      c: function(d) "#ed217c", },
+            { label: 'DAY',     index: .4,    width: .45,      c: function(d) "#25aae1", },
+            { label: 'HOUR',    index: .2,    width: .45,      c: function(d) "#f5ee31", },
+            { label: 'MINUTE',  index: .1,    width: .25,      c: function(d) "#ed217c", },
+            //{ index: .05,    width: .1,     c: function(d) colors[4](Math.round(d.value * 1000)).color, },
+            { label: 'SECOND',  index: .05,    width: .9,     c: function(d) "hsla(0, 50%, 0%, .1)", }
+        ];
 
-        function days() {
+        var calculateOverlays = function() {
+            var out = [];
+            for(var i = 0; i + 2 < fields.length; i++) {
+                // overlay between
+                var f1 = fields[i];
+                var f2 = fields[i+1];
+                var width2 = Math.min(f2.index + processedWidth(f2) - f1.index, processedWidth(f1));
+                if (width2 < 0) {
+                    continue;
+                }
+                out.push({
+                    index: Math.max(f1.index, f2.index),
+                    width: width2,
+                    c: (function(i) {return function(d) overlayColors[i]})(i),
+                    value: Math.max(f1.value, f2.value)
+                });
+            }
+            return out;
+        }
+                 
+        var days = function(d) {
           return 32 - new Date(d.getYear(), d.getMonth(), 32).getDate();
         }
+          
+        var countdownTo = new Date(2014,0,1,0,0,0); 
+        var calculateData = function() {
+            var n = new Date();
+            var d = new Date(countdownTo.getTime() - n.getTime() + n.getTimezoneOffset() * 60 * 1000);
 
-        var millisecond = (d.getMilliseconds() / 1000) * yinit;
-        var second = ((d.getSeconds() + d.getMilliseconds() / 1000) / 60) * yinit;
-        var minute = ((d.getMinutes() + second) / 60) * Math.pow(yinit,2);
-        var hour = ((d.getHours() + minute) / 24) * Math.pow(yinit,4);
-        var weekday = ((d.getDay() + hour) / 7) * Math.pow(yinit,8);
-        var date = ((d.getDate() - 1 + hour) / days()) * Math.pow(yinit,16);
-        var month = ((d.getMonth() + date) / 12) * Math.pow(yinit,32);
+            //var millisecond = (d.getMilliseconds() / 1000) * yinit;
+            var second = (d.getSeconds() + d.getMilliseconds() / 1000) / 60;
+            var minute = (d.getMinutes() + second) / 60;
+            var hour = (d.getHours() + minute) / 24;
+            var date = (d.getDate() - 1 + hour) / days(d);
+            var month = (d.getMonth() + date) / 12;
 
-        return [
-            { 
-                value: month.toFixed(5),     
-                index: .825, 
-                width: .075, 
-                text: fmon(d), 
-                textSize: 55,
-                c: function(d) "#ed217c",
-            },
-            { 
-                value: date.toFixed(5), 
-                index: .775, 
-                width: .075, 
-                text: fdat(d), 
-                textSize: 80,
-                c: function(d) "#25aae1",
-            },
-            { 
-                value: hour.toFixed(5),      
-                index: .6, 
-                width: .2, 
-                text: fhou(d),
-                textSize: 80, 
-                c: function(d) "#f5ee31", 
-            },
-            { 
-                value: minute.toFixed(5),    
-                index: .2, 
-                width: .425, 
-                text: fmin(d), 
-                textSize: 80,
-                c: function(d) "#ed217c", 
-            },
-            { 
-                value: second.toFixed(5),    
-                index: .175, 
-                width: .05, 
-                text: fsec(d), 
-                textSize: 80,    
-                c: function(d) colors[4](Math.round(d * 1000)).color, 
+            fields[0].value = ((1-month) * Math.pow(yinit,16)).toFixed(5);
+            fields[1].value = ((1-date) * Math.pow(yinit,8)).toFixed(5); 
+            fields[2].value = ((1-hour) * Math.pow(yinit,4)).toFixed(5);      
+            fields[3].value = ((1-minute) * Math.pow(yinit,2)).toFixed(5);    
+            fields[4].value = ((1-second) * yinit).toFixed(5);    
+            
+            fields[0].text = Math.floor((d.getTime() - n.getTimezoneOffset() * 60 * 1000) / (720 * 60 * 60) / 1000); 
+            fields[1].text = Math.floor((d.getTime() - n.getTimezoneOffset() * 60 * 1000) / (24 * 60 * 60) / 1000); 
+            fields[2].text = Math.floor((d.getTime() - n.getTimezoneOffset() * 60 * 1000) / (60 * 60) / 1000);
+            fields[3].text = Math.floor((d.getTime() - n.getTimezoneOffset() * 60 * 1000) / 60 / 1000); 
+            fields[4].text = Math.floor((d.getTime() - n.getTimezoneOffset() * 60 * 1000) / 1000); 
+        };
+      
+        calculateData();
+        
+        var label = [
+            "1ST LINE",
+            "2ND LINE",
+            "3RD LINE"
+        ];  
+      
+        var calculateLabel = function() {
+            var i = 0;
+            while (i < fields.length && fields[i].text == 0) {
+                i++;
             }
-          ];
-      };
+            
+            label[0] = '';
+            label[1] = '';
+            label[2] = '';
 
-      var mouseoverLabel;
-      function centerLabel(d) {
-        var f = fields();
-
-        if (mouseoverLabel) {
-            for (var i=0; i < f.length; i++) {
-                if (mouseoverLabel.index == f[i].index) {
-                    return [f[i].text, f[i].textSize * rx, getColor(f[i])];
+            if (i < fields.length) {
+                label[0] = fields[i].text + ' ' + fields[i].label + (fields[i].text > 1 ? 'S' : '');
+                if (i + 1 < fields.length) {
+                    label[1] = fields[i + 1].text + ' ' + fields[i + 1].label + (fields[i + 1].text > 1 ? 'S' : '');
+                    if (i + 2 < fields.length) {
+                        label[2] = fields[i + 2].text + ' ' + fields[i + 2].label + (fields[i + 2].text > 1 ? 'S' : '');
+                    }
                 }
-            }
-        }
-
-        var seconds = f[f.length - 1];
-        var month = f[0];
-        var minute = f[f.length - 2];
-        if (seconds.value > 51/60 && minute.value > 59/60 && month.value > 1/60) {
-            return [60 - seconds.text, 105 * rx, getColor(seconds)];
+            } 
         }
         
-        var index = 0;
-        while(index < 4) {
-           if (f[index].value < 1/60) {
-              if (index == 0) {
-                return [new Date().getFullYear(), 40 * rx, getColor(seconds)];
-              } else if (index == 3) {
-                return [f[2].text + ':' + f[3].text, 36 * rx, getColor(seconds)];
-              } else  {
-                return [f[0].text + ' ' + f[1].text, 34 * rx, getColor(f[1])];
-              }
-           }
-           index++;
-        }
-
-        return [f[2].text + ':' + f[3].text, 36 * rx, getColor(seconds)];
-      }
+        calculateLabel();
 
       var getColor = function(d) {
          return d.c(d);
       }
-
-      var setColor = function(d, colorScheme) {
-        var f = fields();
-        for (var i=0; i < f.length; i++) {
-            if (d.index == f[i].index) {
-                colors[i] = colorScheme;
-                return;
-            }
-        }
+      
+      var processedWidth = function(d) {
+        return d.width * (d.value * outerRadiusPendiente > 1 ? 1 : d.value * outerRadiusPendiente);
       }
 
       var vis = new pv.Panel()
@@ -160,26 +156,49 @@
           .height(radius * 2);
 
       vis.add(pv.Wedge)
-          .data(fields)
+          //.data(function() background.concat(fields.concat(calculateOverlays())))
+          .data(function() fields.concat(calculateOverlays()))
           .left(radius)
           .top(radius)
           .innerRadius(function(d) radius * d.index)
-          .outerRadius(function(d) radius * (d.index + d.width * (d.value * outerRadiusPendiente > 1 ? 1 : d.value * outerRadiusPendiente)))
+          .outerRadius(function(d) {
+              if (d.index > 0) {
+                 return radius * (d.index + processedWidth(d));
+              } else {
+                return radius * (d.index + d.width);
+              }
+           })
           .startAngle(function(d) Math.PI * d.value - 0.5 * Math.PI)
           .angle(function(d) (2 * Math.PI) - 2 * Math.PI * d.value)
           .fillStyle(function(d) getColor(d))
           .lineWidth(Math.floor(0 * rx))
-          .strokeStyle("#FFF")
-          .event("mouseover", function(d) { mouseoverLabel = d; setColor(d, dayColorBrighter); })
-          .event("mouseout", function(d) { mouseoverLabel = undefined; setColor(d, dayColor); })
-    .add(pv.Label)
+          .strokeStyle("#FFF");
+          
+    vis.add(pv.Label)
         .left(radius)
-        .top(radius)
+        .top(radius * 0.55)
         .textAlign("center")
         .textBaseline("middle")
-        .text(function(d) centerLabel(d)[0])
-        .font(function(d) centerLabel(d)[1] + "px 'Monda', sans-serif")
-        .textStyle(function(d) centerLabel(d)[2]);
+        .text(function() label[0])
+        .font("700 " + 100 * rx +  "px 'Arimo', sans-serif")
+        .textStyle("hsla(333, 100%, 100%, 1)")
+    .add(pv.Label)
+        .left(radius)
+        .top(radius * 0.55 + 70 * rx)
+        .textAlign("center")
+        .textBaseline("middle")
+        .text(function() label[1])
+        .font("700 " + 70 * rx +  "px 'Arimo', sans-serif")
+        .textStyle("hsla(333, 100%, 100%, 1)")
+    .add(pv.Label)
+        .left(radius)
+        .top(radius * 0.55 + 120 * rx)
+        .textAlign("center")
+        .textBaseline("middle")
+        .text(function() label[2])
+        .textStyle("hsla(333, 100%, 100%, 1)")
+        .font("700 " + 40 * rx +  "px 'Arimo', sans-serif")
+        ;
 
     var initIncrease = 1 / (1000 / 35) / 5;
     var increaseInit = function() {
@@ -189,18 +208,10 @@
         }
     }
 
-      setInterval(function() {vis.render(); increaseInit()}, 35);
-      $('.row').height($(window).height());
-      $('#info').show();
+      setInterval(function() {vis.render(); calculateData(); calculateLabel(); increaseInit()}, 35);
       
-	  $('#clock').bind('contextmenu',function(e){
-		  e.preventDefault();
-		  return false;
-	  });
-	   
     </script>
 				</div>
-				<div id="date" class="col-lg-12 col-12" title="Click to reset the date"></div>
 			</div>
 		</div>
 
