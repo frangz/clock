@@ -1,0 +1,368 @@
+<!doctype html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>The New Year Clock</title>
+        <meta name="description" content="A twist to the polar clock.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<meta property="fb:app_id"          content="709034602456260" /> 
+		<meta property="og:type"            content="visualization" /> 
+		<meta property="og:url"             content="http://clock.frangz.com.ar" /> 
+		<meta property="og:title"           content="The New Year Clock" /> 
+		<meta property="og:image"           content="http://clock.frangz.com.ar/images/icon.png" />
+
+        <link rel="apple-touch-icon" href="apple-touch-icon-iphone.png" />
+		<link rel="apple-touch-icon" sizes="72x72" href="apple-touch-icon-ipad.png" />
+		<link rel="apple-touch-icon" sizes="114x114" href="apple-touch-icon-iphone4.png" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		
+        <!-- build:css({.tmp,app}) styles/vendor/bootstrap.min.css -->
+        <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+        <!-- endbuild -->
+        <!-- build:css({.tmp,app}) styles/vendor/bootstrap-glyphicons.css -->
+        <link rel="stylesheet" href="styles/vendor/bootstrap-glyphicons.css">
+        <!-- endbuild -->
+        <!-- build:css({.tmp,app}) styles/main.css -->
+        <link rel="stylesheet" href="styles/main.css">
+        <!-- endbuild -->
+        <!-- build:js scripts/vendor/modernizr.js -->
+        <script src="bower_components/modernizr/modernizr.js"></script>
+        <!-- endbuild -->
+        
+        <link href='http://fonts.googleapis.com/css?family=Monda:700' rel='stylesheet' type='text/css'>
+    </head>
+    <body>
+		<div id="fb-root"></div>
+		<script>(function(d, s, id) {
+		  var js, fjs = d.getElementsByTagName(s)[0];
+		  if (d.getElementById(id)) return;
+		  js = d.createElement(s); js.id = id;
+		  js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=709034602456260";
+		  fjs.parentNode.insertBefore(js, fjs);
+		}(document, 'script', 'facebook-jssdk'));</script>
+        <div class="container">
+            <div class="row">
+                <div id="clock" class="col-lg-12 col-12">
+					<button type="button" id="help" href="#info" class="btn btn-default glyphicon glyphicon-question-sign" alt="What's this?" title="What's this?"></button>
+					<script type="text/javascript+protovis">
+      var h = Math.min($(window).height() * 0.9, $(window).width()-30),
+          xinit = 0,
+          yinit = 0,
+          fsec = pv.Format.date("%S"),
+          fmin = pv.Format.date("%M"),
+          fhou = pv.Format.date("%H"),
+          fwee = pv.Format.date("%a"),
+          fdat = pv.Format.date("%d"),
+          fmon = pv.Format.date("%b"),
+          fdate = pv.Format.date("%B %d %Y %H:%M:%S"),
+          radius = h / 2,
+          rx = h / 768,
+          outerRadiusPendiente = 60,
+          // colors
+          // dayColor = pv.Scale.linear(0, 250, 500, 750, 1000).range("#FFFFFF", "#FFA34B", "#FF5E4C", "#D7F7D9", "#48D9DE"),
+          dayColor = function(d) "hsl(" + (80 - d.value * 100) + ", 80%, 50%)",
+          dayColorBrighter = function(d) "hsl(" + (80 - d.value * 100) + ", 100%, 60%)";
+
+          var colors = [dayColor, dayColor, dayColor, dayColor, dayColor];
+          
+      var fields = function() {
+        var d = new Date(new Date().getTime() + calculateDelta());
+        $('#date').text(fdate(d));
+
+        function days() {
+          return 32 - new Date(d.getYear(), d.getMonth(), 32).getDate();
+        }
+
+        var millisecond = (d.getMilliseconds() / 1000) * yinit;
+        var second = ((d.getSeconds() + d.getMilliseconds() / 1000) / 60) * yinit;
+        var minute = ((d.getMinutes() + second) / 60) * Math.pow(yinit,2);
+        var hour = ((d.getHours() + minute) / 24) * Math.pow(yinit,4);
+        var weekday = ((d.getDay() + hour) / 7) * Math.pow(yinit,8);
+        var date = ((d.getDate() - 1 + hour) / days()) * Math.pow(yinit,8);
+        var month = ((d.getMonth() + date) / 12) * Math.pow(yinit,16);
+
+        return [
+            { 
+                value: month.toFixed(5),     
+                index: .825, 
+                width: .075, 
+                text: fmon(d), 
+                textSize: 55,
+                c: function(d) colors[0](d),
+            },
+            { 
+                value: date.toFixed(5), 
+                index: .775, 
+                width: .075, 
+                text: fdat(d), 
+                textSize: 80,
+                c: function(d) colors[1](d),
+            },
+            { 
+                value: hour.toFixed(5),      
+                index: .6, 
+                width: .2, 
+                text: fhou(d),
+                textSize: 80, 
+                c: function(d) colors[2](d), 
+            },
+            { 
+                value: minute.toFixed(5),    
+                index: .2, 
+                width: .425, 
+                text: fmin(d), 
+                textSize: 80,
+                c: function(d) colors[3](d), 
+            },
+            { 
+                value: second.toFixed(5),    
+                index: .175, 
+                width: .05, 
+                text: fsec(d), 
+                textSize: 80,    
+                c: function(d) colors[4](d), 
+            }
+          ];
+      };
+
+      var mouseoverLabel;
+      function centerLabel(d) {
+        var f = fields();
+
+        if (mouseoverLabel) {
+            for (var i=0; i < f.length; i++) {
+                if (mouseoverLabel.index == f[i].index) {
+                    return [f[i].text, f[i].textSize * rx, getColor(f[i])];
+                }
+            }
+        }
+
+        var seconds = f[f.length - 1];
+        var month = f[0];
+        var minute = f[f.length - 2];
+        if (seconds.value > 51/60 && minute.value > 59/60 && month.value > 1/60) {
+            return [60 - seconds.text, 105 * rx, getColor(seconds)];
+        }
+        
+        var index = 0;
+        while(index < 4) {
+           if (f[index].value < 1/60) {
+              if (index == 0) {
+                return [new Date(new Date().getTime() + calculateDelta()).getFullYear(), 40 * rx, getColor(seconds)];
+              } else if (index == 3) {
+                return [f[2].text + ':' + f[3].text, 36 * rx, getColor(seconds)];
+              } else  {
+                return [f[0].text + ' ' + f[1].text, 34 * rx, getColor(f[1])];
+              }
+           }
+           index++;
+        }
+
+        return [f[2].text + ':' + f[3].text, 36 * rx, getColor(seconds)];
+      }
+
+      var getColor = function(d) {
+         return d.c(d);
+      }
+
+      var setColor = function(d, colorScheme) {
+        var f = fields();
+        for (var i=0; i < f.length; i++) {
+            if (d.index == f[i].index) {
+                colors[i] = colorScheme;
+                return;
+            }
+        }
+      }
+
+	  delta = [0, 0, 0, 0, 0];	  
+	  
+	  var calculateDelta = function() {
+		  return delta[0] * 30 * 24 * 60 * 60 * 1000 
+			   + delta[1] * 24 * 60 * 60 * 1000
+			   + delta[2] * 60 * 60 * 1000
+			   + delta[3] * 60 * 1000
+			   + delta[4] * 1000;
+	  }
+	  
+	  var onleftclick = function(d) {
+			var f = fields();
+			for (var i=0; i < f.length; i++) {
+				if (d.index == f[i].index) {
+					delta[i] = delta[i] + 1;
+					return;
+				}
+			}
+	  }
+	  
+	  var onmiddleclick = function(d) {
+		  var f = fields();
+			for (var i=0; i < f.length; i++) {
+				if (d.index == f[i].index) {
+					delta[i] = 0;
+					return;
+				}
+			}
+	  }
+	  
+	  var onrightclick = function(d) {var f = fields();
+			for (var i=0; i < f.length; i++) {
+				if (d.index == f[i].index) {
+					delta[i] = delta[i] - 1;
+					return;
+				}
+			}
+	  }
+      
+      var onmousedown = function(d) {
+		  switch (event.which) {
+			case 1:
+				onleftclick(d);
+				break;
+			case 2:
+				onmiddleclick(d);
+				break;
+			case 3:
+				onrightclick(d);
+				break;
+			default:
+				console.log('You have a strange mouse');
+		}
+		
+		return false;
+	  }
+	  
+	  var onmousewheel = function(d) {
+		  if (event.wheel > 0) {
+			  onleftclick(d);
+		  } else if (event.wheel < 0) {
+			  onrightclick(d);
+		  } 
+	  }
+
+      var vis = new pv.Panel()
+          .width(radius * 2)
+          .height(radius * 2);
+
+      vis.add(pv.Wedge)
+          .data(fields)
+          .left(radius)
+          .top(radius)
+          .innerRadius(function(d) radius * d.index)
+          .outerRadius(function(d) radius * (d.index + d.width * (d.value * outerRadiusPendiente > 1 ? 1 : d.value * outerRadiusPendiente)))
+          .startAngle(function(d) Math.PI * d.value - 0.5 * Math.PI)
+          .angle(function(d) (2 * Math.PI) - 2 * Math.PI * d.value)
+          .fillStyle(function(d) getColor(d))
+          .lineWidth(Math.floor(5 * rx))
+          .strokeStyle("#222")
+          .event("mouseover", function(d) { mouseoverLabel = d; setColor(d, dayColorBrighter); })
+          .event("mouseout", function(d) { mouseoverLabel = undefined; setColor(d, dayColor); })
+          .event("mousedown", onmousedown)
+          .event("mouseup", onmouseup)
+          .event("mousewheel", onmousewheel)
+    .add(pv.Label)
+        .left(radius)
+        .top(radius)
+        .textAlign("center")
+        .textBaseline("middle")
+        .text(function(d) centerLabel(d)[0])
+        .font(function(d) centerLabel(d)[1] + "px 'Monda', sans-serif")
+        .textStyle(function(d) centerLabel(d)[2]);
+
+    var initIncrease = 1 / (1000 / 35) / 5;
+    var increaseInit = function() {
+        if (xinit < 1) {
+            xinit += initIncrease;
+            yinit = (Math.sin(Math.PI * xinit - Math.PI/2)+1)/2;
+        }
+    }
+
+      setInterval(function() {vis.render(); increaseInit()}, 35);
+      $('.row').height($(window).height());
+      $('#info').show();
+      
+	  $('#clock').bind('contextmenu',function(e){
+		  e.preventDefault();
+		  return false;
+	  });
+	   
+    </script>
+				</div>
+				<div id="date" class="col-lg-12 col-12" title="Click to reset the date"></div>
+			</div>
+			<div id="info" class="row">
+				<div class="col-lg-12 col-12">
+					<button type="button" id="back" href="#clock" class="btn btn-default glyphicon glyphicon-arrow-up" alt="Back to top" title="Back to top"></button>
+					<h1>The New Year Clock</h1>
+					<p id="share">
+						<div class="fb-like" data-href="http://clock.frangz.com.ar" data-width="450" data-layout="button_count" data-show-faces="false" data-send="false"></div>
+						<span>&nbsp;</span>
+						<a href="https://twitter.com/share" class="twitter-share-button" data-via="frangz">Tweet</a>
+						<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>	
+					</p>
+					<p>I've always been fascinated with clocks. Specially with analog clocks in every form: sand clocks, water clocks, 
+					   sundials, dial clocks with numbers, without numbers... 
+					   I guess I don't need to say that I was amazed by <a href="http://blog.pixelbreaker.com/polarclock" target="_blank">Pixelbreaker's Polar Clock</a>. I've spent hours watching it morph, including over New Year when all the rings go back to zero at the same time.
+					   This is my own twist of the polar clock using <a href="http://mbostock.github.io/protovis/ex/clock.html" target="_blank">Protovis</a>.</p>
+					<p>First, I made the rings represent time left instead of time past. I believe we found ourselves asking how much time 
+					we have left in the hour, day, month or year, more often than how much time has past.
+					<em>A countdown to New Year</em> would be another way of describing this visualization.
+					</p>
+					<p>The order of the rings is inverted: seconds in the innermost ring and year in the outermost one, overlapping each other, 
+					following an idea of containment. This also minimizes the movement of the whole clock. I find clocks that move to much to 
+					be distracting. I also gave a different width to the rings, making minutes and hours to be the widest, in an attempt to make
+					it easier to identify the time position in the current day by using the rings. 
+					</p>
+					<p>   
+					   I removed the text from each ring and added the current hour and minute in the middle. I'd keep if text free,
+					   but I thought in case some actually decides to use this as a clock, it would be useful to know the exact time at
+					   a glance. Also, watch this space when a change in date, month or year happens. 
+					</p>
+					<p>Then, a few aesthetic changes based on personal taste. After some intense internal debate I decided to moved 
+						away from the dial clock standard of having the position zero at 90 degrees. Instead, the rings travel the clock
+						from top to bottom on both sides, as if the time was leaking down. This makes it symmetric and hence more attractive to t
+						he eye.</p>
+					<p>Deciding on colours was hell given the amount of different choices. To keep it simple, I decided to limit the hue 
+					spectrum from green to red.</p>
+					<p>And last but not least, the way each ring is <em>born</em> was an accidental feature that I loved. You can preview this 
+					when the clock loads, but I hardly recommend checking it out in real time.</p>
+					<br>
+					<p>Hope you like it! Share and enjoy!</p>
+					<p><em>&#8212; <a href="http://twitter.com/frangz" target="_blank">@frangz</a></em></p>
+				</div>
+			</div>
+		</div>
+
+        <!--[if lt IE 7]>
+            <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+        <![endif]-->
+
+        <script>
+		  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		  ga('create', 'UA-43103840-1', 'frangz.com.ar');
+		  ga('send', 'pageview');
+		</script>
+
+        <!-- build:js scripts/vendor/jquery.js -->
+        <script src="bower_components/jquery/jquery.js"></script>
+        <!-- endbuild -->
+
+        <!-- build:js scripts/vendor/protovis.js -->
+        <script type="text/javascript" src="scripts/vendor/protovis.js"></script>
+        <!-- endbuild -->
+
+        <!-- build:js scripts/main.js -->
+        <script type="text/javascript" src="scripts/main.js"></script>
+        <!-- endbuild -->
+
+</body>
+</html>
